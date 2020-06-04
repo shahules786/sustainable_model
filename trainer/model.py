@@ -63,20 +63,44 @@ def pad(feature,labels):
 
 
 
-
-
-
-
-
-
 def read_input(text,labels,batch_size,mode):
 
     x= tf.constant(text)
     x= vectorize_input(x)
 
-    dataset = tf.data.dataset.from_tensor_slices((x,labels))
+    dataset = tf.data.Dataset.from_tensor_slices((x,labels))
 
     dataset = dataset.map(pad)
+
+    if mode == tf.estimator.Modekeys.TRAIN :
+            num_epochs=None
+            dataset = dataset.shuffle(2020)
+    elif mode==tf.estimator.Modekeys.EVAL:
+            num_epochs=1
+
+    return dataset.repeat(num_epochs).batch(batch_size)
+
+
+
+def keras_estimator():
+
+    model = models.Sequential()
+
+    num_features = len(word_index)+1
+
+    model.add(Embedding(input_dim=num_features,output_dim=embedding_dim,
+                        input_length=MAX_SEQ_LENGTH,weights=[embedding_matrix]),
+                        trainable=is_trainable)
+
+    model.add(Bidirectional(LSTM(150, dropout=0.2, recurrent_dropout=0.2,return_sequences=True)))
+    model.add(GlobalAvgPool1D())
+    model.add(Dense(3, activation='softmax'))
+
+    model.compile(loss='categorical_crossentropy', optimizer=Adam(lr), metrics=['accuracy'])
+  
+    estimator = tf.keras.estimator.model_to_estimator(keras_model=model,model_dir=model_dir,config=config)
+    return estimator
+
 
 
 
