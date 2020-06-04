@@ -82,11 +82,15 @@ def read_input(text,labels,batch_size,mode):
 
 
 
-def keras_estimator():
+def keras_estimator(model_dir,lr,config):
+
+
+    embedding_matrix = get_embedding_matrix(word_index,embedding_path,embedding_dim)
 
     model = models.Sequential()
 
     num_features = len(word_index)+1
+
 
     model.add(Embedding(input_dim=num_features,output_dim=embedding_dim,
                         input_length=MAX_SEQ_LENGTH,weights=[embedding_matrix]),
