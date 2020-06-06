@@ -27,10 +27,10 @@ VOCAB_FILE_PATH= None
 PADWORD='wxz'
 
 
-def load_train_eval(path):
+def load_train_eval(train_path,eval_path):
 
-    train=pd.read_csv("train.csv")
-    test =pd.read_csv('eval.csv')
+    train=pd.read_csv(train_path)
+    test =pd.read_csv(eval_path)
 
     return ((train['text'].values.tolist(),train['target'].map(CLASSES).values),
             (test['test'].values,test['target'].map(CLASSES).values))
@@ -104,6 +104,59 @@ def keras_estimator(model_dir,lr,config):
   
     estimator = tf.keras.estimator.model_to_estimator(keras_model=model,model_dir=model_dir,config=config)
     return estimator
+
+
+
+    def train_and_evaluate(output_dir,hparams):
+
+
+        (train_texts,train_labels),(test_texts,test_labels)=load_train_eval('train.csv','test.csv')
+
+        tokenizer = text.Tokenizer()
+        tokenizer.fit_on_text(train_texts)
+
+
+        tf.gfile.MkDir(output_dir) # directory must exist before we can use tf.gfile.open
+        global VOCAB_FILE_PATH; VOCAB_FILE_PATH = os.path.join(output_dir,'vocab.txt')
+        with tf.gfile.Open(VOCAB_FILE_PATH, 'wb') as f:
+                f.write("{},0\n".format(PADWORD))  # map padword to 0
+                for word, index in tokenizer.word_index.items():
+                    if index < TOP_K: # only save mappings for TOP_K words
+                        f.write("{},{}\n".format(word, index))
+
+
+        runconfig = tf.estimator.RunConfig(save_checkpoints_steps=500)
+
+
+
+         # Create TrainSpec
+        train_steps = hparams['num_epochs'] * len(train_texts) / hparams['batch_size']
+        train_spec = tf.estimator.TrainSpec(
+        input_fn=lambda:input_fn(
+            train_texts,
+            train_labels,
+            hparams['batch_size'],
+            mode=tf.estimator.ModeKeys.TRAIN),
+             max_steps=train_steps
+            )
+
+        # Create EvalSpec
+        exporter = tf.estimator.LatestExporter('exporter', serving_input_fn)
+        eval_spec = tf.estimator.EvalSpec(
+            input_fn=lambda:input_fn(
+            test_texts,
+            test_labels,
+            hparams['batch_size'],
+            mode=tf.estimator.ModeKeys.EVAL),
+            steps=None,
+            exporters=exporter,
+            start_delay_secs=10,
+            throttle_secs=10
+            )
+
+        # Start training
+        tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
+
 
 
 
