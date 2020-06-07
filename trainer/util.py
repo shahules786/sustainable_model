@@ -1,5 +1,6 @@
 
 from nltk.stem import PorterStemmer , WordNetLemmatizer 
+import numpy as np
 
 ps = PorterStemmer() 
 lemmatizer = WordNetLemmatizer() 
@@ -7,7 +8,7 @@ lemmatizer = WordNetLemmatizer()
 
 
 
-def get_embeddding_matrix(word_index,embedding_path,embedding_dim):
+def get_embedding_matrix(word_index,embedding_path,embedding_dim):
         
     num_words = len(word_index)+1
 
@@ -20,7 +21,7 @@ def get_embeddding_matrix(word_index,embedding_path,embedding_dim):
             embedding_dict[word]=vectors
     f.close()
 
-    embedding_matrix = np.zeroes((num_words,embedding_dim))
+    embedding_matrix = np.zeros((num_words,embedding_dim))
 
     for word,i in word_index.items():
 
@@ -37,7 +38,7 @@ def get_embeddding_matrix(word_index,embedding_path,embedding_dim):
       elif emb_vec is not None:
           embedding_matrix[i]=emb_vec
           
-  return embedding_matrix
+    return embedding_matrix
 
 
 

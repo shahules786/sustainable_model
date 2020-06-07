@@ -17,23 +17,25 @@ from tensorflow.python.keras.layers import Embedding
 from tensorflow.python.keras.layers import Conv1D
 from tensorflow.python.keras.layers import MaxPooling1D
 from tensorflow.python.keras.layers import GlobalAveragePooling1D
+from tensorflow.python.keras.layers import Bidirectional,LSTM
+from util import *
 
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
-CLASSES = {'financial':0,'cyber':1,'other':2}
+targets = ['financial','cyber','other']
 MAX_SEQ_LENGTH = 100
 VOCAB_FILE_PATH= None
 PADWORD='wxz'
 
 
 def load_train_eval(train_path,eval_path):
+    path="~/Alrtai-Notebooks/Datasets/risk_"
+    train=pd.read_csv(path+train_path)
+    test =pd.read_csv(path+eval_path)
 
-    train=pd.read_csv(train_path)
-    test =pd.read_csv(eval_path)
-
-    return ((train['text'].values.tolist(),train['target'].map(CLASSES).values),
-            (test['test'].values,test['target'].map(CLASSES).values))
+    return ((train['title'].astype(str).values.tolist(),train[targets].values),
+            (test['title'].astype(str).values,test[targets].values))
 
 
 def vectorize_input(text):
@@ -82,7 +84,7 @@ def read_input(text,labels,batch_size,mode):
 
 
 
-def keras_estimator(model_dir,lr,config):
+def keras_estimator(model_dir,config,learning_rate,embedding_path,word_index,embedding_dim=25):
 
 
     embedding_matrix = get_embedding_matrix(word_index,embedding_path,embedding_dim)
@@ -100,20 +102,20 @@ def keras_estimator(model_dir,lr,config):
     model.add(GlobalAvgPool1D())
     model.add(Dense(3, activation='softmax'))
 
-    model.compile(loss='categorical_crossentropy', optimizer=Adam(lr), metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate), metrics=['accuracy'])
   
     estimator = tf.keras.estimator.model_to_estimator(keras_model=model,model_dir=model_dir,config=config)
     return estimator
 
 
 
-    def train_and_evaluate(output_dir,hparams):
+def train_and_evaluate(output_dir,hparams):
 
 
-        (train_texts,train_labels),(test_texts,test_labels)=load_train_eval('train.csv','test.csv')
+        (train_texts,train_labels),(test_texts,test_labels)=load_train_eval('train.csv','eval.csv')
 
         tokenizer = text.Tokenizer()
-        tokenizer.fit_on_text(train_texts)
+        tokenizer.fit_on_texts(train_texts)
 
 
         tf.gfile.MkDir(output_dir) # directory must exist before we can use tf.gfile.open
@@ -121,11 +123,19 @@ def keras_estimator(model_dir,lr,config):
         with tf.gfile.Open(VOCAB_FILE_PATH, 'wb') as f:
                 f.write("{},0\n".format(PADWORD))  # map padword to 0
                 for word, index in tokenizer.word_index.items():
-                    if index < TOP_K: # only save mappings for TOP_K words
+                        # only save mappings for TOP_K words
                         f.write("{},{}\n".format(word, index))
 
 
         runconfig = tf.estimator.RunConfig(save_checkpoints_steps=500)
+
+        estimator = keras_estimator(
+        model_dir=output_dir,
+        config=runconfig,
+        learning_rate=hparams['learning_rate'],
+        embedding_path=hparams['embedding_path'],
+        word_index=tokenizer.word_index
+        )
 
 
 
@@ -158,6 +168,7 @@ def keras_estimator(model_dir,lr,config):
         tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
 
 
-
-
+hparams={'batch_size':8,'num_epochs':10,'learning_rate':1e-5,
+        'embedding_path':'/home/shahul/Alrtai-Notebooks/Datasets/2568_4304_bundle_archive/glove.twitter.27B.25d.txt'}
+train_and_evaluate(".",hparams)
 
