@@ -18,16 +18,17 @@ from tensorflow.python.keras.layers import Conv1D
 from tensorflow.python.keras.layers import MaxPooling1D
 from tensorflow.python.keras.layers import GlobalAveragePooling1D
 from tensorflow.python.keras.layers import Bidirectional,LSTM
+from tensorflow.python.keras.optimizers import Adam
 from util import *
 
 
-tf.logging.set_verbosity(tf.logging.INFO)
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
 
 targets = ['financial','cyber','other']
 MAX_SEQ_LENGTH = 100
 VOCAB_FILE_PATH= None
 PADWORD='wxz'
-
+is_trainable=False
 
 def load_train_eval(train_path,eval_path):
     path="~/Alrtai-Notebooks/Datasets/risk_"
@@ -44,7 +45,7 @@ def vectorize_input(text):
     words  = tf.sparse_tensor_to_dense(words)
 
 
-    table = tf.contrib.lookup.index_table_from_file(VOCAB_FILE_PATH,num_oov_buckets=0,delimeter=',')
+    table = tf.contrib.lookup.index_table_from_file(VOCAB_FILE_PATH,num_oov_buckets=0,delimiter=',')
 
     numbers = table.lookup(words)
     
@@ -53,7 +54,7 @@ def vectorize_input(text):
 
 def pad(feature,labels):
 
-    non_zero_indices=tf.where(tf.not_equal(feature,tf.zeroes_like(feature)))
+    non_zero_indices=tf.where(tf.not_equal(feature,tf.zeros_like(feature)))
     non_zero_words = tf.gather(feature,non_zero_indices)
     non_zero_words = tf.squeeze(non_zero_words,axis=1)
 
@@ -65,7 +66,7 @@ def pad(feature,labels):
 
 
 
-def read_input(text,labels,batch_size,mode):
+def input_fn(text,labels,batch_size,mode):
 
     x= tf.constant(text)
     x= vectorize_input(x)
@@ -95,17 +96,26 @@ def keras_estimator(model_dir,config,learning_rate,embedding_path,word_index,emb
 
 
     model.add(Embedding(input_dim=num_features,output_dim=embedding_dim,
-                        input_length=MAX_SEQ_LENGTH,weights=[embedding_matrix]),
-                        trainable=is_trainable)
+                        input_length=MAX_SEQ_LENGTH,weights=[embedding_matrix],
+                        trainable=is_trainable))
 
     model.add(Bidirectional(LSTM(150, dropout=0.2, recurrent_dropout=0.2,return_sequences=True)))
-    model.add(GlobalAvgPool1D())
+    model.add(GlobalAveragePooling1D())
     model.add(Dense(3, activation='softmax'))
 
     model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate), metrics=['accuracy'])
   
     estimator = tf.keras.estimator.model_to_estimator(keras_model=model,model_dir=model_dir,config=config)
     return estimator
+
+
+def serving_input_fn():
+        feature_placeholder = tf.compat.v1.placeholder(tf.string,[None])
+        features=vectorize_input(feature_placeholder)
+        return tf.estimator.export.TensorServingInputReceiver(features, feature_placeholder)
+
+
+
 
 
 
@@ -118,9 +128,9 @@ def train_and_evaluate(output_dir,hparams):
         tokenizer.fit_on_texts(train_texts)
 
 
-        tf.gfile.MkDir(output_dir) # directory must exist before we can use tf.gfile.open
+        tf.io.gfile.mkdir(output_dir) # directory must exist before we can use tf.gfile.open
         global VOCAB_FILE_PATH; VOCAB_FILE_PATH = os.path.join(output_dir,'vocab.txt')
-        with tf.gfile.Open(VOCAB_FILE_PATH, 'wb') as f:
+        with tf.io.gfile.GFile(VOCAB_FILE_PATH, 'wb') as f:
                 f.write("{},0\n".format(PADWORD))  # map padword to 0
                 for word, index in tokenizer.word_index.items():
                         # only save mappings for TOP_K words
