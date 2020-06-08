@@ -58,7 +58,7 @@ def pad(feature,labels):
     non_zero_words = tf.gather(feature,non_zero_indices)
     non_zero_words = tf.squeeze(non_zero_words,axis=1)
 
-    padded = tf.pad(non_zero_words,[MAX_SEQ_LENGTH])
+    padded = tf.pad(non_zero_words,[[MAX_SEQ_LENGTH,0]])
     padded  = padded[-MAX_SEQ_LENGTH:]
 
     return (padded,labels)
@@ -75,10 +75,10 @@ def input_fn(text,labels,batch_size,mode):
 
     dataset = dataset.map(pad)
 
-    if mode == tf.estimator.Modekeys.TRAIN :
+    if mode == tf.estimator.ModeKeys.TRAIN :
             num_epochs=None
             dataset = dataset.shuffle(2020)
-    elif mode==tf.estimator.Modekeys.EVAL:
+    elif mode==tf.estimator.ModeKeys.EVAL:
             num_epochs=1
 
     return dataset.repeat(num_epochs).batch(batch_size)
