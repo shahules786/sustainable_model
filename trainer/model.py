@@ -45,8 +45,14 @@ def vectorize_input(text):
     words  = tf.sparse_tensor_to_dense(words)
 
 
-    table = tf.contrib.lookup.index_table_from_file(VOCAB_FILE_PATH,num_oov_buckets=0,delimiter=',')
-
+    table = tf.contrib.lookup.index_table_from_file(
+        vocabulary_file=VOCAB_FILE_PATH,
+        num_oov_buckets=0,
+        vocab_size=None,
+        default_value=0,  # for words not in vocabulary (OOV)
+        key_column_index=0,
+        value_column_index=1,
+        delimiter=',')
     numbers = table.lookup(words)
     
     return numbers
