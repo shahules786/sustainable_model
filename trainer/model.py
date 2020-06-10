@@ -30,10 +30,9 @@ VOCAB_FILE_PATH= None
 PADWORD='wxz'
 is_trainable=False
 
-def load_train_eval(train_path,eval_path):
-    path="~/Alrtai-Notebooks/Datasets/risk_"
-    train=pd.read_csv(path+train_path)
-    test =pd.read_csv(path+eval_path)
+def load_train_eval(train_path,eval_path,rows):
+    train=pd.read_csv(train_path,nrows=rows)
+    test =pd.read_csv(eval_path)
 
     return ((train['title'].astype(str).values.tolist(),train[targets].values),
             (test['title'].astype(str).values,test[targets].values))
@@ -127,8 +126,10 @@ def serving_input_fn():
 
 def train_and_evaluate(output_dir,hparams):
 
+        tf.compat.v1.summary.FileWriterCache.clear() # ensure filewriter cache is clear for TensorBoard events file
 
-        (train_texts,train_labels),(test_texts,test_labels)=load_train_eval('train.csv','eval.csv')
+
+        (train_texts,train_labels),(test_texts,test_labels)=load_train_eval(hparams['train_data_path'],hparams['eval_data_path'],hparams['native'])
 
         tokenizer = text.Tokenizer()
         tokenizer.fit_on_texts(train_texts)
@@ -183,8 +184,4 @@ def train_and_evaluate(output_dir,hparams):
         # Start training
         tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
 
-
-hparams={'batch_size':8,'num_epochs':10,'learning_rate':1e-5,
-        'embedding_path':'/home/shahul/Alrtai-Notebooks/Datasets/2568_4304_bundle_archive/glove.twitter.27B.25d.txt'}
-train_and_evaluate(".",hparams)
 
