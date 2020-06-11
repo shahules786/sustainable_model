@@ -8,7 +8,7 @@ setup(
     name='sustainable_model',
     version='1.0',
     install_requires=REQUIRED_PACKAGES,
-    packages=['trainer'],
+    packages=find_packages(),
     include_package_data=True,
     description='model for text classification'
 )

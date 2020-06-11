@@ -19,7 +19,7 @@ from tensorflow.python.keras.layers import MaxPooling1D
 from tensorflow.python.keras.layers import GlobalAveragePooling1D
 from tensorflow.python.keras.layers import Bidirectional,LSTM
 from tensorflow.python.keras.optimizers import Adam
-from util import *
+from . import util
 
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
@@ -30,8 +30,8 @@ VOCAB_FILE_PATH= None
 PADWORD='wxz'
 is_trainable=False
 
-def load_train_eval(train_path,eval_path,rows):
-    train=pd.read_csv(train_path,nrows=rows)
+def load_train_eval(train_path,eval_path):
+    train=pd.read_csv(train_path)
     test =pd.read_csv(eval_path)
 
     return ((train['title'].astype(str).values.tolist(),train[targets].values),
@@ -93,7 +93,7 @@ def input_fn(text,labels,batch_size,mode):
 def keras_estimator(model_dir,config,learning_rate,embedding_path,word_index,embedding_dim=25):
 
 
-    embedding_matrix = get_embedding_matrix(word_index,embedding_path,embedding_dim)
+    embedding_matrix = util.get_embedding_matrix(word_index,embedding_path,embedding_dim)
 
     model = models.Sequential()
 
@@ -129,7 +129,7 @@ def train_and_evaluate(output_dir,hparams):
         tf.compat.v1.summary.FileWriterCache.clear() # ensure filewriter cache is clear for TensorBoard events file
 
 
-        (train_texts,train_labels),(test_texts,test_labels)=load_train_eval(hparams['train_data_path'],hparams['eval_data_path'],hparams['native'])
+        (train_texts,train_labels),(test_texts,test_labels)=load_train_eval(hparams['train_data_path'],hparams['eval_data_path'])
 
         tokenizer = text.Tokenizer()
         tokenizer.fit_on_texts(train_texts)

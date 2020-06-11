@@ -3,7 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
-import model
+from . import model
 
 
 if __name__ == '__main__':
@@ -55,12 +55,12 @@ if __name__ == '__main__':
         type=float,
         required=False
     )
-    parser.add_argument(
-        '--native',
-        action='store_true',
-        help='use native in-graph pre-processing functions',
-        required=True
-    )
+    #parser.add_argument(
+    #    '--native',
+    #    help='use native in-graph pre-processing functions',
+    #    type=int,
+    #    required=True
+    #)
 
     args, _ = parser.parse_known_args()
     hparams = args.__dict__
