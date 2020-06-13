@@ -12,26 +12,34 @@ if __name__ == '__main__':
     parser.add_argument(
         '--output_dir',
         help='GCS location to write checkpoints and export models',
-        default="/home/shahul/Alrtai-Notebooks/Datasets/",
+        default="gs://risk_model/model_dir/",
         required=False
     )
     parser.add_argument(
         '--train_data_path',
         help='can be a local path or a GCS url (gs://...)',
-        default='/home/shahul/Alrtai-Notebooks/Datasets/risk_train.csv',
+        default='gs://risk_model/Datasets/risk_train.csv',
         required=False
     )
     parser.add_argument(
         '--eval_data_path',
         help='can be a local path or a GCS url (gs://...)',
-        default='/home/shahul/Alrtai-Notebooks/Datasets/risk_eval.csv',
+        default='gs://risk_model/Datasets/risk_eval.csv',
         required=False
     )
     parser.add_argument(
         '--embedding_path',
         help='OPTIONAL: can be a local path or a GCS url (gs://...). \
               Download from: https://nlp.stanford.edu/projects/glove/',
-        default="/home/shahul/Alrtai-Notebooks/Datasets/2568_4304_bundle_archive/glove.twitter.27B.25d.txt",
+        default="gs://risk_model/Datasets/glove.42B.300d.txt",
+        required=False
+    )
+    parser.add_argument(
+        '--embedding_dim',
+        help='OPTIONAL: can be a local path or a GCS url (gs://...). \
+              Download from: https://nlp.stanford.edu/projects/glove/',
+        default=300,
+        type=int,
         required=False
     )
     parser.add_argument(

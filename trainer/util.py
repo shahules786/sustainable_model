@@ -14,6 +14,7 @@ lemmatizer = WordNetLemmatizer()
 
 def get_embedding_matrix(word_index,embedding_path,embedding_dim):
         
+
     num_words = len(word_index)+1
 
     embedding_dict={}

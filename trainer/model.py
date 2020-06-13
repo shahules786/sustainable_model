@@ -151,7 +151,8 @@ def train_and_evaluate(output_dir,hparams):
         config=runconfig,
         learning_rate=hparams['learning_rate'],
         embedding_path=hparams['embedding_path'],
-        word_index=tokenizer.word_index
+        word_index=tokenizer.word_index,
+        embedding_dim=hparams['embedding_dim']
         )
 
 
