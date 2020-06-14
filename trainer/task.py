@@ -24,7 +24,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--eval_data_path',
         help='can be a local path or a GCS url (gs://...)',
-        default='gs://risk_model/Datasets/risk_eval.csv',
+        default='gs://risk_model/Datasets/risk_test.csv',
         required=False
     )
     parser.add_argument(
