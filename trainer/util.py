@@ -1,5 +1,6 @@
 
 from nltk.stem import PorterStemmer , WordNetLemmatizer 
+import tensorflow as tf
 import numpy as np
 from google.cloud import storage
 from zipfile import ZipFile
@@ -18,7 +19,7 @@ def get_embedding_matrix(word_index,embedding_path,embedding_dim):
     num_words = len(word_index)+1
 
     embedding_dict={}
-    with open(embedding_path,'r') as f:
+    with tf.io.gfile.GFile(embedding_path,'r') as f:
         for line in f:
             values=line.split()
             word=values[0]
