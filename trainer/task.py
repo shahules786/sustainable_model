@@ -51,7 +51,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--batch_size',
         help='number of records to read during each training step, default=128',
-        default=128,
+        default=16,
         type=int,
         required=False
 

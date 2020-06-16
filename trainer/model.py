@@ -108,7 +108,7 @@ def keras_estimator(model_dir,config,learning_rate,embedding_path,word_index,emb
     model.add(GlobalAveragePooling1D())
     model.add(Dense(3, activation='softmax'))
 
-    model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate), metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer='Adam', metrics=['accuracy'])
   
     estimator = tf.keras.estimator.model_to_estimator(keras_model=model,model_dir=model_dir,config=config)
     return estimator
